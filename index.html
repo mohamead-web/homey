@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="cyan">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HOMEY — متجر إلكتروني تجريبي</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    /* =====================
+       الثيمات (سماوي/أحمر/أزرق)
+       ===================== */
+    :root{
+      --ink:#0f172a; --ink-2:#334155;
+      --glass:255 255 255/.65; --glass-b:255 255 255/.32;
+      --radius:16px; --danger:#ff5b5b; --ok:#22c55e;
+      --focus: color-mix(in oklab, var(--green), black 20%);
+      --panel-grad:linear-gradient(180deg,#e8fff5,#dbfff6);
+      --gloss:linear-gradient(180deg,#ffffff66 0%,#ffffff22 40%,#0000 60%);
+      --shadow:0 10px 30px rgba(0, 186, 199, .18);
+      --grad:linear-gradient(135deg,#cffafe,#a5f3fc 45%,#e0f2fe);
+    }
+    html[data-theme="cyan"]{
+      --green:#06b6d4;
+      --shadow:0 10px 30px rgba(6,182,212,.18);
+      --grad:linear-gradient(135deg,#cffafe,#a5f3fc 45%,#e0f2fe);
+    }
+    html[data-theme="red"]{
+      --green:#ef4444;
+      --shadow:0 10px 30px rgba(239,68,68,.18);
+      --grad:linear-gradient(135deg,#ffe4e6,#fecaca 45%,#fee2e2);
+    }
+    html[data-theme="blue"]{
+      --green:#3b82f6;
+      --shadow:0 10px 30px rgba(59,130,246,.18);
+      --grad:linear-gradient(135deg,#dbeafe,#bfdbfe 45%,#e0e7ff);
+    }
+    @media (prefers-color-scheme:dark){
+      :root{
+        --ink:#e6f4ee; --ink-2:#b4c8bf; --glass:10 20 26/.35; --glass-b:255 255 255/.15;
+        --grad:radial-gradient(1200px_600px at 80% -10%, #0b2f24, transparent),
+               radial-gradient(900px_500px at 10% 110%, #07362a, transparent);
+      }
+    }
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, "Noto Kufi Arabic", sans-serif; color:var(--ink);
+      background:var(--grad); background-attachment: fixed; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+    }
+    *{box-sizing:border-box}
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+    button{font:inherit; cursor:pointer}
+    :focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+    @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+
+    /* زجاجيات ومساعدة */
+    .glass{
+      background: color-mix(in oklab, rgb(var(--glass)) 90%, transparent);
+      border:1px solid rgb(var(--glass-b)); box-shadow:var(--shadow); border-radius:var(--radius);
+      backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%);
+    }
+    .chip{padding:.45rem .7rem; border-radius:999px; border:1px solid rgb(var(--glass-b)); background:color-mix(in oklab,rgb(var(--glass)) 88%, transparent)}
+    .btn{display:inline-block; background:var(--green); color:#03230e; border:none; border-radius:12px; padding:.65rem .8rem; font-weight:800; text-align:center; transition:transform .12s ease, box-shadow .12s ease}
+    .btn:is(:hover,:focus-visible){transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn-ghost{background:color-mix(in oklab, rgb(var(--glass)) 90%, transparent); border:1px solid rgb(var(--glass-b)); border-radius:12px; padding:.6rem .8rem}
+    .icon{inline-size:22px; block-size:22px}
+    .visually-hidden{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+    /* الهيدر */
+    .header{position:sticky; top:0; z-index:60; border-bottom:1px solid rgb(var(--glass-b));
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      background: color-mix(in oklab, rgb(var(--glass)) 92%, transparent);
+    }
+    .nav{display:grid; grid-template-columns:auto 1fr auto auto auto auto; gap:.75rem; align-items:center; padding:.6rem .8rem}
+    .brand{display:flex; align-items:center; gap:.6rem; font-weight:900; letter-spacing:.2px}
+    .dot{inline-size:34px; block-size:34px; border-radius:10px; background:var(--green); display:grid; place-items:center; box-shadow:var(--shadow)}
+    .search{display:flex; align-items:center; gap:.5rem; padding:.5rem .7rem; border-radius:999px}
+    .search input{all:unset; direction:rtl; inline-size:100%}
+    .btn-ico{position:relative; padding:.5rem; border-radius:12px}
+    .badge{position:absolute; inset-inline-start:-6px; inset-block-start:-6px; background:var(--green); color:#062014; border-radius:999px; padding:1px 6px; font-size:.72rem; border:1px solid #0001}
+    .theme-switch{display:flex; gap:.35rem; align-items:center}
+    .swatch{inline-size:18px; block-size:18px; border-radius:6px; border:1px solid rgb(var(--glass-b)); cursor:pointer}
+    .swatch[data-t="cyan"]{background:#06b6d4}
+    .swatch[data-t="red"]{background:#ef4444}
+    .swatch[data-t="blue"]{background:#3b82f6}
+
+    /* تخطيط الصفحة */
+    .page{display:grid; gap:.8rem; padding:12px}
+    .mood{display:flex; gap:.5rem; overflow:auto; padding:.2rem .1rem}
+    .mood .chip{white-space:nowrap; font-weight:800}
+    .stories{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(120px,1fr); gap:.6rem; overflow:auto; scroll-snap-type:inline mandatory; padding-block:.2rem}
+    .story{scroll-snap-align:start; padding:14px; text-align:center; font-weight:800}
+
+    .capsules{display:grid; grid-template-columns:1fr; gap:.8rem}
+    .capsule{position:relative; padding:16px; display:grid; grid-template-columns:64px 1fr auto; gap:.8rem; align-items:center; background:var(--panel-grad); border-radius:16px}
+    .capsule .ico{inline-size:48px; block-size:48px; border-radius:14px; background:var(--green); display:grid; place-items:center; box-shadow:var(--shadow)}
+    .capsule h3{margin:0; font-size:1rem}
+    .capsule p{margin:0; color:var(--ink-2); font-size:.9rem}
+    .capsule a{font-weight:800}
+
+    .tabs{display:flex; gap:.5rem; align-items:center; overflow:auto; padding:.2rem}
+    .tab{border:1px solid rgb(var(--glass-b)); background:color-mix(in oklab,rgb(var(--glass)) 88%, transparent); padding:.45rem .8rem; border-radius:999px; font-weight:700; white-space:nowrap}
+    .tab[aria-selected="true"]{background:var(--green); color:#062014}
+
+    .filters{display:grid; gap:.6rem; padding:12px}
+    .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:.6rem}
+    select, input[type=number]{all:unset; display:block; width:100%; padding:.6rem}
+
+    .products{display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:.6rem}
+    .card{padding:.6rem; display:grid; gap:.5rem; position:relative; min-height: 340px; transition:transform .15s ease, box-shadow .15s ease; overflow:hidden; border-radius:16px}
+    .card:hover{transform: translateY(-2px)}
+    .card::before{content:""; position:absolute; inset:0; background:var(--gloss); opacity:0; transition:opacity .2s ease; pointer-events:none}
+    .card:hover::before{opacity:.8}
+    .fav{position:absolute; inset-inline-start:8px; inset-block-start:8px}
+    .price{display:flex; gap:.4rem; align-items:baseline}
+    .price s{color:var(--ink-2); font-size:.85rem}
+    .badge-corner{position:absolute; inset-block-start:10px; inset-inline-end:10px; background:color-mix(in oklab, var(--green), white 40%); color:#062014; padding:.25rem .5rem; border-radius:999px; font-size:.78rem; border:1px solid rgb(var(--glass-b))}
+
+    .skeleton{background:linear-gradient(90deg,#0000 0,#ffffff33 50%,#0000 100%), #0001; background-size:200% 100%; animation:sh 1s linear infinite}
+    @keyframes sh{to{background-position:-200% 0}}
+
+    .overlay{position:fixed; inset:0; background:rgba(15,23,42,.35); backdrop-filter:blur(4px); display:none}
+    .overlay.show{display:grid; place-items:end}
+    .overlay.center.show{place-items:center}
+    .dialog{padding:12px; width:100%; max-width:520px; margin:0 12px 12px}
+    .dialog .head{display:flex; justify-content:space-between; align-items:center}
+
+    .cart-dialog,.auth-dialog,.acct-dialog{padding:12px; width:100%; max-width:560px; border-radius:16px; position:relative; overflow:hidden}
+    .cart-dialog:before,.auth-dialog:before,.acct-dialog:before{
+      content:""; position:absolute; inset:0; border-radius:inherit;
+      border:1px solid rgb(var(--glass-b)); pointer-events:none;
+      box-shadow: inset 0 1px 0 #fff3, inset 0 0 0 1px #fff2;
+    }
+
+    #toast{position:fixed; inset-inline:12px; inset-block-end:24px; padding:10px 14px; display:none; font-weight:700}
+    #toast.show{display:block}
+
+    .empty{padding:16px; text-align:center; color:var(--ink-2)}
+    .footer{margin:16px 12px; padding:12px; display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+
+    .reveal{opacity:0; transform:translateY(10px); transition:opacity .4s ease, transform .4s ease}
+    .reveal.in{opacity:1; transform:none}
+
+    @media (min-width:768px){
+      .page{grid-template-columns:280px 1fr; align-items:start}
+      .filters{position:sticky; top:64px}
+      .products{grid-template-columns: repeat(3, minmax(0,1fr))}
+      .capsules{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (min-width:1200px){
+      .products{grid-template-columns: repeat(4, minmax(0,1fr))}
+      .capsules{grid-template-columns:repeat(4,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <!-- الهيدر -->
+  <header class="header">
+    <nav class="nav">
+      <div class="brand" aria-label="HOMEY">
+        <div class="dot" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0b0b0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
+        </div>
+        <strong>HOMEY</strong>
+      </div>
+
+      <div class="glass search" role="search">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" aria-label="بحث" placeholder="ابحث عن منتج…" />
+      </div>
+
+      <div class="theme-switch glass" style="padding:.35rem .6rem; border-radius:999px">
+        <span style="font-size:.82rem">اللون</span>
+        <div class="swatch" data-t="cyan" title="سماوي"></div>
+        <div class="swatch" data-t="red" title="أحمر"></div>
+        <div class="swatch" data-t="blue" title="أزرق"></div>
+      </div>
+
+      <button id="btn-fav" class="glass btn-ico" aria-label="المفضلة">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 22l7.8-8.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </button>
+
+      <button id="btn-auth" class="glass btn-ico" aria-label="تسجيل الدخول">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+
+      <button id="btn-cart" class="glass btn-ico" aria-label="السلة">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span id="cart-count" class="badge">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- المحتوى -->
+  <main class="page">
+    <!-- فلاتر -->
+    <aside class="glass filters reveal" aria-label="فلاتر">
+      <div class="grid-2">
+        <label>
+          <div class="chip" style="margin-bottom:.4rem">الفئة</div>
+          <div class="glass"><select id="filter-cat"></select></div>
+        </label>
+        <label>
+          <div class="chip" style="margin-bottom:.4rem">الترتيب</div>
+          <div class="glass"><select id="sort">
+            <option value="popular">الأكثر شيوعًا</option>
+            <option value="price-asc">السعر تصاعدي</option>
+            <option value="price-desc">السعر تنازلي</option>
+            <option value="alpha">الاسم أبجدي</option>
+          </select></div>
+        </label>
+      </div>
+      <div class="grid-2">
+        <label>
+          <div class="chip" style="margin-bottom:.4rem">حد أدنى</div>
+          <div class="glass"><input id="min" type="number" placeholder="0" inputmode="numeric"></div>
+        </label>
+        <label>
+          <div class="chip" style="margin-bottom:.4rem">حد أقصى</div>
+          <div class="glass"><input id="max" type="number" placeholder="99999" inputmode="numeric"></div>
+        </label>
+      </div>
+      <button id="reset" class="btn-ghost">إعادة الضبط</button>
+      <div class="chip" id="fav-pill" style="display:none">عرض المفضلة فقط مفعّل</div>
+    </aside>
+
+    <section style="display:grid; gap:.8rem">
+      <!-- شريط “مزاج اليوم” -->
+      <div class="mood reveal" id="mood"></div>
+
+      <!-- قصص/عروض -->
+      <div class="stories reveal" id="stories"></div>
+
+      <!-- كبسولات Homey -->
+      <div class="capsules" id="capsules"></div>
+
+      <!-- تبويبات -->
+      <div class="tabs reveal" role="tablist" aria-label="أقسام">
+        <button class="tab" role="tab" aria-selected="true" data-tab="all">الكل</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="bests">الأكثر مبيعًا</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="new">جديد</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="rec">موصى به</button>
+      </div>
+
+      <!-- شبكة منتجات -->
+      <div class="products reveal" id="grid" aria-live="polite"></div>
+      <!-- حالة فارغة -->
+      <div id="empty" class="empty" hidden>لا توجد نتائج مطابقة للبحث/الفلاتر.</div>
+    </section>
+  </main>
+
+  <!-- مودال تفاصيل المنتج -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="glass dialog" role="document">
+      <div class="head">
+        <strong id="dlg-title">—</strong>
+        <button id="dlg-close" class="btn-ghost" aria-label="إغلاق">إغلاق</button>
+      </div>
+      <img id="dlg-img" alt="" style="border-radius:14px; margin-top:.5rem" decoding="async">
+      <div class="price" style="margin-block:.4rem">
+        <strong id="dlg-price"></strong>
+        <s id="dlg-was"></s>
+      </div>
+      <p id="dlg-desc" style="color:var(--ink-2)"></p>
+      <div id="dlg-specs" style="display:flex; gap:.4rem; flex-wrap:wrap"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.6rem; margin-top:.6rem">
+        <button id="dlg-add" class="btn">إضافة للسلة</button>
+        <button id="dlg-fav" class="btn-ghost">أضف للمفضلة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- مودال السلة — وسط الشاشة -->
+  <div id="cart-backdrop" class="overlay center" aria-hidden="true">
+    <div class="glass cart-dialog" role="document">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <strong>السلة</strong>
+        <button id="cart-close" class="btn-ghost">إغلاق</button>
+      </div>
+      <div class="glass" style="padding:.6rem; display:flex; gap:.5rem; align-items:center; margin-top:.6rem">
+        <input id="coupon" placeholder="كوبون خصم (HOMEY10)" style="all:unset; flex:1; direction:rtl">
+        <button id="apply-coupon" class="chip">تطبيق</button>
+      </div>
+      <div id="cart-items" style="display:grid; gap:.6rem; margin-top:.6rem"></div>
+      <div style="display:flex; justify-content:space-between; margin-top:.4rem">
+        <span>الخصم</span><strong id="cart-discount">0 ر.س</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:.2rem">
+        <strong>الإجمالي</strong>
+        <strong id="cart-total">0 ر.س</strong>
+      </div>
+      <button id="checkout" class="btn" style="display:block; margin-top:.6rem">تأكيد الطلب</button>
+    </div>
+  </div>
+
+  <!-- مودال حسابي -->
+  <div id="acct-backdrop" class="overlay center" aria-hidden="true">
+    <div class="glass acct-dialog" role="document" aria-label="حسابي">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <strong>حسابي</strong>
+        <button id="acct-close" class="btn-ghost">إغلاق</button>
+      </div>
+      <div id="acct-body" style="margin-top:.6rem; display:grid; gap:.6rem">
+        <div class="glass" style="padding:.6rem">
+          <strong>الطلبات</strong>
+          <div style="color:var(--ink-2); margin-top:.3rem">لا توجد طلبات بعد.</div>
+        </div>
+        <button id="logout" class="btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="glass" role="status" aria-live="polite">—</div>
+
+  <!-- تذييل -->
+  <footer class="glass footer reveal">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <strong>HOMEY</strong>
+      <span style="color:var(--ink-2)">تجربة تسوّق زجاجية بسيطة وأنيقة.</span>
+    </div>
+    <nav style="display:flex; gap:10px; flex-wrap:wrap">
+      <a class="chip" href="#">عنّا</a>
+      <a class="chip" href="#">سياسة وهمية</a>
+      <a class="chip" href="#">تواصل</a>
+    </nav>
+  </footer>
+
+  <!-- =====================
+       Supabase + إعدادات المشروع
+       ===================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // استبدل القيم لو تغيّر مشروعك
+    window.SB_URL  = "https://wlnaasqzejdtxjghutvd.supabase.co";
+    window.SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbmFhc3F6ZWpkdHhqZ2h1dHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNTkyMjcsImV4cCI6MjA3MDczNTIyN30.HbTAM182uyGQ8we1GcG2feRSMrM-5l-4ihcYTy0t5Qc";
+  </script>
+
+  <!-- =====================
+       قائمة المنتجات بصورك (داخل images/)
+       ===================== -->
+  <script>
+    window.PRODUCTS = [
+      {id:'p1', name:'سامسونج S25 ألترا', price:4699, was:5299, cat:'جوالات', best:true, rec:true,
+        img:'images/S25ULTRA.webp', desc:'هاتف رائد بأداء قوي وبطارية تدوم طويلًا.', specs:['شاشة 6.8"','256GB','كاميرا 200MP']},
+      {id:'p2', name:'آيفون 16 برو ماكس', price:5499, was:5999, cat:'جوالات', new:true, rec:true,
+        img:'images/IP 16 PRO MAX.png', desc:'تجربة iOS مع تصميم فخم وأداء سلس.', specs:['شاشة 6.7"','A18','ProMotion']},
+      {id:'p3', name:'Apple Buds', price:899, was:999, cat:'سماعات', best:true,
+        img:'images/APPLE BUDS.jpg', desc:'صوت نقي وتصميم مريح.', specs:['ANC','Bluetooth','شحن سريع']},
+      {id:'p4', name:'Buds 3 Pro', price:699, was:899, cat:'سماعات', new:true,
+        img:'images/BUDS 3 BRO.webp', desc:'لاسلكي ومريح.', specs:['ANC','Bluetooth','شحن سريع']},
+      {id:'p5', name:'شاحن سريع 45W', price:119, was:149, cat:'اكسسوارات', rec:true,
+        img:'images/SAMSUNG.png', desc:'شحن آمن وسريع متوافق مع أغلب الأجهزة.', specs:['USB-C','PD']},
+      {id:'p6', name:'iPhone (صورة عامة)', price:4299, was:4799, cat:'جوالات', best:true,
+        img:'images/IPHONE.png', desc:'خيار قوي وأداء سلس.', specs:['شاشة ممتازة','بطارية جيدة']}
+    ];
+  </script>
+
+  <!-- تطبيق الواجهة -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
