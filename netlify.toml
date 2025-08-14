@@ -1,0 +1,9 @@
+[build]
+publish = "."
+command = ""
+
+# لو فتحت مسار غير موجود يرجّعك للصفحة الرئيسية بدل 404
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
